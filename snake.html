@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    canvas {
+      border: 1px solid #000;
+    }
+
+    button {
+      font-size: 16px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+  <title>Snake Game</title>
+</head>
+<body>
+  <button onclick="startGame()">Start Game</button>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    // Game variables
+    let canvas, ctx;
+    let snake;
+    let ball;
+    let gameInterval;
+
+    // Initial game setup
+    function startGame() {
+      snake = new Snake();
+      ball = new Ball();
+      canvas = document.getElementById("gameCanvas");
+      ctx = canvas.getContext("2d");
+      document.addEventListener("keydown", moveSnake);
+      gameInterval = setInterval(updateGame, 150); // Adjusted snake speed
+    }
+
+    // Snake constructor
+    function Snake() {
+      this.length = 1;
+      this.body = [{ x: 10, y: 10 }];
+      this.direction = "right";
+    }
+
+    // Ball constructor
+    function Ball() {
+      this.x = getRandomPosition();
+      this.y = getRandomPosition();
+    }
+
+    // Update the game state
+    function updateGame() {
+      clearCanvas();
+      moveSnake();
+      drawSnake();
+      drawBall();
+
+      // Check for collisions
+      if (checkCollision()) {
+        endGame();
+      }
+    }
+
+    // Clear the canvas
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Move the snake
+    function moveSnake(event) {
+      let key = event ? event.key : snake.direction;
+
+      switch (key) {
+        case "ArrowUp":
+          snake.direction = "up";
+          break;
+        case "ArrowDown":
+          snake.direction = "down";
+          break;
+        case "ArrowLeft":
+          snake.direction = "left";
+          break;
+        case "ArrowRight":
+          snake.direction = "right";
+          break;
+      }
+
+      let newHead = { x: snake.body[0].x, y: snake.body[0].y };
+
+      switch (snake.direction) {
+        case "up":
+          newHead.y -= 20;
+          break;
+        case "down":
+          newHead.y += 20;
+          break;
+        case "left":
+          newHead.x -= 20;
+          break;
+        case "right":
+          newHead.x += 20;
+          break;
+      }
+
+      snake.body.unshift(newHead);
+
+      // Check if snake ate the ball
+      if (newHead.x === ball.x && newHead.y === ball.y) {
+        snake.length++;
+        ball = new Ball(); // Change ball position randomly
+      }
+
+      // Keep the snake's length
+      while (snake.body.length > snake.length) {
+        snake.body.pop();
+      }
+    }
+
+    // Draw the snake on the canvas
+    function drawSnake() {
+      ctx.fillStyle = "#4CAF50";
+      snake.body.forEach(segment => {
+        ctx.fillRect(segment.x, segment.y, 20, 20);
+      });
+    }
+
+    // Draw the ball on the canvas
+    function drawBall() {
+      ctx.fillStyle = "#f00";
+      ctx.fillRect(ball.x, ball.y, 20, 20);
+    }
+
+    // Check for collisions with borders or itself
+    function checkCollision() {
+      let head = snake.body[0];
+
+      // Check if snake hits the walls
+      if (
+        head.x < 0 || head.x >= canvas.width ||
+        head.y < 0 || head.y >= canvas.height
+      ) {
+        return true;
+      }
+
+      // Check if snake hits itself
+      for (let i = 1; i < snake.body.length; i++) {
+        if (head.x === snake.body[i].x && head.y === snake.body[i].y) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // End the game
+    function endGame() {
+      clearInterval(gameInterval);
+      alert("Game Over! Your score: " + snake.length);
+      startGame();
+    }
+
+    // Generate a random position for the ball
+    function getRandomPosition() {
+      return Math.floor(Math.random() * 20) * 20;
+    }
+  </script>
+</body>
+</html>
